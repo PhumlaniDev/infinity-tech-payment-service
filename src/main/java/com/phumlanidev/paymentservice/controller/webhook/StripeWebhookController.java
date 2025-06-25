@@ -10,6 +10,7 @@ import com.stripe.model.Event;
 import com.stripe.net.Webhook;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,8 +24,8 @@ public class StripeWebhookController {
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final OrderRepository orderRepository;
 
-//  @Value("${stripe.webhook-secret}")
-//  private String webhookSecret;
+  @Value("${stripe.webhook-secret}")
+  private String webhookSecret;
 
   @PostMapping("/webhook")
   public ResponseEntity<String> handleStripeWebhook(@RequestBody String payload,
@@ -32,9 +33,9 @@ public class StripeWebhookController {
     try {
       log.info("✅ Received Stripe webhook payload");
 
-      String webhookSecret = "whsec_a1dc0a8f02a3b27f53168cfd30ffac90721c8fe8e0a51670f4b7ca0b6487c832";
+      String secret = webhookSecret;
 
-      Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
+      Event event = Webhook.constructEvent(payload, sigHeader, secret);
 
       log.info("👉 Stripe event type: {}", event.getType());
 
