@@ -1,6 +1,7 @@
 package com.phumlanidev.paymentservice.service.impl;
 
 import com.phumlanidev.paymentservice.config.KeycloakTokenProvider;
+import com.phumlanidev.paymentservice.dto.OrderDto;
 import com.phumlanidev.paymentservice.dto.PaymentConfirmationRequestDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -9,11 +10,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -48,11 +50,22 @@ public class PaymentService {
       // Notify the notification service
       String notifyUrl = "http://localhost:9500/api/v1/notifications/payment-confirmation";
 
+      String getOrderDetailsUrl = "http://localhost:9300/api/v1/order/" + orderId;
+
+      ResponseEntity<OrderDto> orderResponse = restTemplate.exchange(
+              getOrderDetailsUrl,
+              HttpMethod.GET,
+              requestEntity,
+              OrderDto.class
+      );
+
+      OrderDto order = orderResponse.getBody();
+
       PaymentConfirmationRequestDto confirmationDto = PaymentConfirmationRequestDto.builder()
               .orderId(orderId)
-              .totalAmount(BigDecimal.valueOf(66000)) // Example amount, replace with actual
+              .totalAmount(Objects.requireNonNull(order).getTotalPrice()) // Example amount, replace with actual
               .currency("USD") // Example currency, replace with actual
-              .toEmail("aphumlani.dev@gmail.com") // Example email, replace with actual
+              .toEmail(order.getEmail()) // Example email, replace with actual
               .timestamp(Instant.now())
               .build();
 
