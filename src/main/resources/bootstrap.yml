@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: payment-service
+  cloud:
+    config:
+      uri: http://config-server:8888
+    bootstrap:
+      enabled: true
