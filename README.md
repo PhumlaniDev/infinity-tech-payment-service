@@ -1,3 +1,4 @@
+[![CI Workflow](https://github.com/PhumlaniDev/infinity-tech-payment-service/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/PhumlaniDev/infinity-tech-payment-service/actions/workflows/ci-cd.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=PhumlaniDev_infinity-tech-payment-service&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=PhumlaniDev_infinity-tech-payment-service)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=PhumlaniDev_infinity-tech-payment-service&metric=bugs)](https://sonarcloud.io/summary/new_code?id=PhumlaniDev_infinity-tech-payment-service)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=PhumlaniDev_infinity-tech-payment-service&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=PhumlaniDev_infinity-tech-payment-service)
@@ -40,19 +41,19 @@ The **Payment Service** is responsible for handling customer payments in the eCo
 
 ## 🚀 Endpoints
 
-| Method | Endpoint                        | Description                              | Auth Required |
-|--------|----------------------------------|------------------------------------------|---------------|
-| POST   | `/api/v1/payments/checkout`     | Initiate Stripe Checkout Session         | ✅ Yes        |
-| POST   | `/api/v1/stripe/webhook`        | Stripe Webhook Listener                  | ❌ No         |
+| Method | Endpoint                    | Description                      | Auth Required |
+|--------|-----------------------------|----------------------------------|---------------|
+| POST   | `/api/v1/payments/checkout` | Initiate Stripe Checkout Session | ✅ Yes         |
+| POST   | `/api/v1/stripe/webhook`    | Stripe Webhook Listener          | ❌ No          |
 
 ---
 
 ## 🔐 Inter-Service Communication
 
-| Consumer         | Target Service   | Endpoint                                    | Secured by Role           |
-|------------------|------------------|---------------------------------------------|---------------------------|
-| Payment Service  | Order Service     | `PUT /api/v1/order/mark-paid/{orderId}`     | `order-service-role`      |
-| Payment Service  | Notification Service | `POST /api/v1/notifications/payment-confirmation` | `notification-service-role` |
+| Consumer        | Target Service       | Endpoint                                          | Secured by Role             |
+|-----------------|----------------------|---------------------------------------------------|-----------------------------|
+| Payment Service | Order Service        | `PUT /api/v1/order/mark-paid/{orderId}`           | `order-service-role`        |
+| Payment Service | Notification Service | `POST /api/v1/notifications/payment-confirmation` | `notification-service-role` |
 
 ---
 
