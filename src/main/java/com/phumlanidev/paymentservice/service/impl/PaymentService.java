@@ -1,10 +1,10 @@
 package com.phumlanidev.paymentservice.service.impl;
 
-import com.phumlanidev.paymentservice.client.NotificationClient;
-import com.phumlanidev.paymentservice.client.OrderClient;
 import com.phumlanidev.paymentservice.config.JwtAuthenticationConverter;
 import com.phumlanidev.paymentservice.dto.OrderDto;
 import com.phumlanidev.paymentservice.dto.PaymentConfirmationRequestDto;
+import com.phumlanidev.paymentservice.utils.NotificationServiceWrapper;
+import com.phumlanidev.paymentservice.utils.OrderServiceWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +24,8 @@ public class PaymentService {
 
   private final AuditLogServiceImpl auditLogService;
   private final HttpServletRequest request;
-  private final OrderClient orderClient;
-  private final NotificationClient notificationClient;
+  private final OrderServiceWrapper orderServiceWrapper;
+  private final NotificationServiceWrapper notificationServiceWrapper;
   private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
   @Transactional
@@ -33,10 +33,10 @@ public class PaymentService {
     try {
       // Notify the order service to mark the order as PAID
       log.info("Marking order as PAID for order ID: {}", orderId);
-      orderClient.markOrderAsPaid(orderId);
+      orderServiceWrapper.markOrderAsPaid(orderId);
       log.info("✅ Order marked as PAID successfully for order ID: {}", orderId);
 
-      OrderDto orderResponse = orderClient.getOrderDetails(orderId);
+      OrderDto orderResponse = orderServiceWrapper.getOrderDetails(orderId);
 
 
       PaymentConfirmationRequestDto confirmationDto = PaymentConfirmationRequestDto.builder()
@@ -47,7 +47,7 @@ public class PaymentService {
               .timestamp(Instant.now())
               .build();
 
-      notificationClient.sendPaymentConfirmationNotification(confirmationDto);
+      notificationServiceWrapper.sendPaymentConfirmationNotification(confirmationDto);
       log.info("✅ Workflow complete: order marked as PAID and user notified");
       logAudit();
 

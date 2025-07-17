@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
-        name = "notification-client",
+        name = "notification-service",
         configuration = AuthFeingConfig.class
 )
 public interface NotificationClient {
