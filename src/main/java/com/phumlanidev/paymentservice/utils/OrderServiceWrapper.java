@@ -17,21 +17,25 @@ public class OrderServiceWrapper {
   private static final Logger log = LoggerFactory.getLogger(OrderServiceWrapper.class);
   private final OrderClient orderClient;
 
-  @CircuitBreaker(name = "orderService", fallbackMethod = "fallbackOrder")
+  @CircuitBreaker(name = "orderService", fallbackMethod = "markOrderAsPaidFallback")
   @Retry(name = "orderService")
   @TimeLimiter(name = "orderService")
-  public void markOrderAsPaid(String orderId) {
+  public void markOrderAsPaid(Long orderId) {
     orderClient.markOrderAsPaid(orderId);
   }
 
-  @CircuitBreaker(name = "orderService", fallbackMethod = "fallbackOrder")
+  @CircuitBreaker(name = "orderService", fallbackMethod = "getOrderDetailsFallback")
   @Retry(name = "orderService")
   @TimeLimiter(name = "orderService")
-  public OrderDto getOrderDetails(String orderId) {
+  public OrderDto getOrderDetails(Long orderId) {
     return orderClient.getOrderDetails(orderId);
   }
 
-  public void fallbackOrder(OrderDto request, Throwable ex) {
-    log.error("Notification failed: {}", ex.getMessage());
+  public void markOrderAsPaidFallback(Throwable ex) {
+    log.error("Marking order as paid failed: {}", ex.getMessage());
+  }
+
+  public void getOrderDetailsFallback(Throwable ex) {
+    log.error("Getting order details failed: {}", ex.getMessage());
   }
 }

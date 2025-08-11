@@ -52,7 +52,7 @@ public class StripeWebhookController {
           return ResponseEntity.badRequest().body("Order ID not found");
         }
         log.info("✅ Stripe checkout completed for orderId={}", orderId);
-        paymentService.handlePaymentSuccess(orderId);
+        paymentService.handlePaymentSuccess(Long.valueOf(orderId));
       }
       // Log all existing orders for debugging
       orderRepository.findAll().forEach(o -> log.info("Existing order: {}", o.getOrderId()));

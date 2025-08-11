@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 public interface OrderClient {
 
   @PutMapping("/api/v1/order/mark-paid/{orderId}")
-  void markOrderAsPaid(String orderId);
+  void markOrderAsPaid(Long orderId);
 
   @GetMapping("/api/v1/order/{orderId}")
-  OrderDto getOrderDetails(String orderId);
+  OrderDto getOrderDetails(Long orderId);
 }

@@ -32,4 +32,7 @@ public class OrderDto {
 
   @NotBlank(message = "Email is required")
   private String email;
+
+  @NotBlank(message = "Currency is required")
+  private String currency;
 }

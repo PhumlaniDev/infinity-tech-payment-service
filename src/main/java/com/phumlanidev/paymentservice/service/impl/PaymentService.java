@@ -1,8 +1,10 @@
 package com.phumlanidev.paymentservice.service.impl;
 
+import com.phumlanidev.commonevents.events.PaymentCompletedEvent;
 import com.phumlanidev.paymentservice.config.JwtAuthenticationConverter;
 import com.phumlanidev.paymentservice.dto.OrderDto;
 import com.phumlanidev.paymentservice.dto.PaymentConfirmationRequestDto;
+import com.phumlanidev.paymentservice.message.PaymentPublisher;
 import com.phumlanidev.paymentservice.utils.NotificationServiceWrapper;
 import com.phumlanidev.paymentservice.utils.OrderServiceWrapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,10 +28,11 @@ public class PaymentService {
   private final HttpServletRequest request;
   private final OrderServiceWrapper orderServiceWrapper;
   private final NotificationServiceWrapper notificationServiceWrapper;
+  private final PaymentPublisher paymentPublisher;
   private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
   @Transactional
-  public void handlePaymentSuccess(String orderId) {
+  public void handlePaymentSuccess(Long orderId) {
     try {
       // Notify the order service to mark the order as PAID
       log.info("Marking order as PAID for order ID: {}", orderId);
@@ -37,8 +40,20 @@ public class PaymentService {
       log.info("✅ Order marked as PAID successfully for order ID: {}", orderId);
 
       OrderDto orderResponse = orderServiceWrapper.getOrderDetails(orderId);
+      if (orderResponse == null) {
+        log.warn("⚠️ Order details not found for ID: {}", orderId);
+        return;
+      }
 
+      PaymentCompletedEvent paymentCompletedEvent = PaymentCompletedEvent.builder()
+              .orderId(orderId)
+              .toEmail(orderResponse.getEmail())
+              .totalAmount(orderResponse.getTotalPrice())
+              .currency(orderResponse.getCurrency())
+              .timestamp(Instant.now())
+              .build();
 
+      paymentPublisher.publishPaymentCompletedEvent(paymentCompletedEvent);
       PaymentConfirmationRequestDto confirmationDto = PaymentConfirmationRequestDto.builder()
               .orderId(orderId)
               .totalAmount(Objects.requireNonNull(orderResponse).getTotalPrice()) // Example amount, replace with actual
@@ -62,7 +77,6 @@ public class PaymentService {
     String username = auth != null ? auth.getName() : "anonymous";
     Jwt jwt = jwtAuthenticationConverter.getJwt();
     String userId = jwtAuthenticationConverter.extractUserId(jwt);
-
 
     auditLogService.log(
             "PAYMENT_SUCCESS",

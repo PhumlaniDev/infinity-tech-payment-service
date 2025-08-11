@@ -27,7 +27,7 @@ public class PaymentConfirmationRequestDto {
   @Email
   private String toEmail; // User's email address
   @NotBlank(message = "Order ID is required")
-  private String orderId; // Unique order identifier
+  private Long orderId; // Unique order identifier
   @NotNull
   private Instant timestamp; // Timestamp of the payment confirmation request
 }
