@@ -21,14 +21,16 @@ public class AuditLog {
     private Long id;
     @Column(name = "action")
     private String action;
+    @Column(name = "payment_id")
+    private Long paymentId;
     @Column(name = "user_id")
     private String userId;
-    @Column(name = "username")
-    private String username;
     @Column(name = "ip_address")
     private String ipAddress;
     @Column(name = "details")
     private String details;
+    @Column(name = "transaction_id")
+    private String transactionId;
     @Column(name = "timestamp")
     private Instant timestamp;
 

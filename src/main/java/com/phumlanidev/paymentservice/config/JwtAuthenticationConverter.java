@@ -4,8 +4,10 @@ import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -29,9 +31,6 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
     authorities.addAll(extractRealmRoles(jwt));
     authorities.addAll(extractResourceRoles(jwt));
     authorities.addAll(extractTopLevelRoles(jwt));
-
-    System.out.println("🔐 Extracted authorities from token:");
-    authorities.forEach(a -> System.out.println(" -> " + a.getAuthority()));
 
     return new JwtAuthenticationToken(jwt, authorities, getPrincipleClaimName(jwt));
   }
@@ -82,17 +81,26 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
             .collect(Collectors.toSet());
   }
 
-  public String extractUserEmail(Jwt jwt) {
-    return jwt.getClaim("email");
+  public String getCurrentEmail() {
+    Jwt jwt = getCurrentJwt();
+    return jwt != null ? jwt.getClaim("email") : null;
   }
 
-  public String extractUserId(Jwt jwt) {
-    return jwt.getClaim("sub");
+  public String getCurrentUserId() {
+    Jwt jwt = getCurrentJwt();
+    return jwt != null ? jwt.getSubject() : "anonymous";
   }
 
-  public Jwt getJwt() {
-    // get token value from the current authentication context
-    return (Jwt) org.springframework.security.core.context.SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
+  public String getCurrentUsername() {
+    Jwt jwt = getCurrentJwt();
+    return jwt != null ? jwt.getClaim("preferred_username") : "anonymous";
+  }
+
+  public Jwt getCurrentJwt() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication instanceof JwtAuthenticationToken token) {
+      return token.getToken();
+    }
+    return null;
   }
 }

@@ -1,6 +1,6 @@
 package com.phumlanidev.paymentservice.event.dlq;
 
-import com.phumlanidev.commonevents.events.PaymentRequestEvent;
+import com.phumlanidev.commonevents.events.payment.PaymentRequestEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PaymentRequestedEventDlqPublisher {
 
-  private final KafkaTemplate<String, PaymentRequestEvent> kafkaTemplate;
+  private final KafkaTemplate<Object, Object> kafkaTemplate;
   private static final String DLQ_TOPIC = "payment-completed-dlq";
 
   public void publishToDlq(String key, PaymentRequestEvent event, Exception ex) {

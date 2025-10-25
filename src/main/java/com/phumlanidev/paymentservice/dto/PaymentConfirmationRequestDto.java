@@ -1,5 +1,6 @@
 package com.phumlanidev.paymentservice.dto;
 
+import com.phumlanidev.paymentservice.enums.PaymentMethod;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -26,8 +27,14 @@ public class PaymentConfirmationRequestDto {
   @NotBlank
   @Email
   private String toEmail; // User's email address
-  @NotBlank(message = "Order ID is required")
+  @NotNull(message = "Order ID is required")
   private Long orderId; // Unique order identifier
   @NotNull
   private Instant timestamp; // Timestamp of the payment confirmation request
+  @NotNull
+  private PaymentMethod paymentMethod; // e.g., CREDIT_CARD, PAYPAL'
+  @NotBlank
+  private String userId; // ID of the user making the payment
 }
+
+

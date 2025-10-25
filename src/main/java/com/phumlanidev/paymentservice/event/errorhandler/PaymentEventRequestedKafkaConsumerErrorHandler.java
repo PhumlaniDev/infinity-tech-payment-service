@@ -1,6 +1,7 @@
 package com.phumlanidev.paymentservice.event.errorhandler;
 
-import com.phumlanidev.commonevents.events.PaymentRequestEvent;
+
+import com.phumlanidev.commonevents.events.payment.PaymentRequestEvent;
 import com.phumlanidev.paymentservice.event.dlq.PaymentRequestedEventDlqPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

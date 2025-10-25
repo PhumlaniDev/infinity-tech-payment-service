@@ -1,17 +1,23 @@
 package com.phumlanidev.paymentservice.config;
 
-import com.phumlanidev.commonevents.events.PaymentRequestEvent;
+
+import com.phumlanidev.commonevents.events.payment.PaymentCompletedEvent;
+import com.phumlanidev.commonevents.events.payment.PaymentFailedEvent;
+import com.phumlanidev.commonevents.events.payment.PaymentInitiatedEvent;
+import com.phumlanidev.commonevents.events.payment.PaymentRequestEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +39,7 @@ public class KafkaConfig {
     props.put("spring.deserializer.value.delegate.class", JsonDeserializer.class);
     props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.phumlanidev.commonevents.events");
     props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false); // Use type headers for deserialization
-    props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.phumlanidev.commonevents.events.PaymentRequestEvent");
+    props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.phumlanidev.commonevents.events.payment.PaymentRequestEvent");
     return new DefaultKafkaConsumerFactory<>(props);
   }
 
@@ -46,5 +52,65 @@ public class KafkaConfig {
     factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
     factory.setCommonErrorHandler(new DefaultErrorHandler());
     return factory;
+  }
+
+  @Bean
+  public ProducerFactory<Object, Object> genericProducerFactory() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+    props.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, true);
+    return new DefaultKafkaProducerFactory<>(props);
+  }
+
+  @Bean
+  public KafkaTemplate<Object, Object> kafkaTemplate() {
+    return new KafkaTemplate<>(genericProducerFactory());
+  }
+
+  @Bean
+  public ProducerFactory<String, PaymentCompletedEvent> paymentCompletedProducerFactory() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+    props.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, true);
+    return new DefaultKafkaProducerFactory<>(props);
+  }
+
+  @Bean
+  public KafkaTemplate<String, PaymentCompletedEvent> paymentCompletedKafkaTemplate() {
+    return new KafkaTemplate<>(paymentCompletedProducerFactory());
+  }
+
+  @Bean
+  public ProducerFactory<String, PaymentInitiatedEvent> paymentInitiatedProducerFactory() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+    props.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, true);
+    return new DefaultKafkaProducerFactory<>(props);
+  }
+
+  @Bean
+  public KafkaTemplate<String, PaymentInitiatedEvent> paymentInitiatedKafkaTemplate() {
+    return new KafkaTemplate<>(paymentInitiatedProducerFactory());
+  }
+
+  @Bean
+  public ProducerFactory<String, PaymentFailedEvent> paymentFailedProducerFactory() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+    props.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, true);
+    return new DefaultKafkaProducerFactory<>(props);
+  }
+
+  @Bean
+  public KafkaTemplate<String, PaymentFailedEvent> paymentFailedKafkaTemplate() {
+    return new KafkaTemplate<>(paymentFailedProducerFactory());
   }
 }

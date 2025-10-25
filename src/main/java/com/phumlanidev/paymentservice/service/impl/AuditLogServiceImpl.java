@@ -19,11 +19,10 @@ public class AuditLogServiceImpl {
 
     private final AuditLogRepository auditLogRepository;
 
-    public void log(String action, String userId, String username, String ipAddress, String details) {
+    public void log(String action, String userId, String ipAddress, String details) {
         AuditLog log = AuditLog.builder()
                 .action(action)
                 .userId(userId)
-                .username(username)
                 .ipAddress(ipAddress)
                 .details(details)
                 .timestamp(Instant.now())
@@ -43,7 +42,6 @@ public class AuditLogServiceImpl {
         return AuditLogDto.builder()
                 .id(String.valueOf(log.getId()))
                 .userId(log.getUserId())
-                .username(log.getUsername())
                 .action(log.getAction())
                 .ip(log.getIpAddress())
                 .details(log.getDetails())

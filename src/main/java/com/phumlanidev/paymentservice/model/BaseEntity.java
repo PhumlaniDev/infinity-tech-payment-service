@@ -26,7 +26,7 @@ import java.time.Instant;
 public class BaseEntity {
 
   @CreatedDate
-  @Column(updatable = false)
+  @Column(updatable = false, nullable = false)
   private Instant createdAt = Instant.now();
 
   @CreatedBy
