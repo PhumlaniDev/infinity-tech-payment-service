@@ -17,13 +17,13 @@ import java.util.Map;
 @Slf4j
 public class ServiceTokenManager {
 
-  @Value("${keycloak.token-uri:http://localhost:8080/realms/payment-service/protocol/openid-connect/token}")
+  @Value("${keycloak.token-uri}")
   private String tokenUri;
 
-  @Value("${keycloak.resource:payment-service")
+  @Value("${keycloak.resource}")
   private String resource;
 
-  @Value("${keycloak.credentials-secret:903bMC5ByQz0EiPxJ7djC9eUS5ZYe44Z}")
+  @Value("${keycloak.credentials-secret}")
   private String secret;
 
   private String cachedToken;
