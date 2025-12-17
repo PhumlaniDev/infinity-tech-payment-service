@@ -1,9 +1,12 @@
 package com.phumlanidev.paymentservice.service.impl;
 
 
+import com.phumlanidev.commonevents.events.order.OrderPlacedEvent;
 import com.phumlanidev.commonevents.events.payment.PaymentCompletedEvent;
 import com.phumlanidev.commonevents.events.payment.PaymentFailedEvent;
 import com.phumlanidev.commonevents.events.payment.PaymentInitiatedEvent;
+import com.phumlanidev.paymentservice.clinet.OrderServiceClient;
+import com.phumlanidev.paymentservice.dto.OrderDto;
 import com.phumlanidev.paymentservice.enums.PaymentStatus;
 import com.phumlanidev.paymentservice.event.publisher.PublishPaymentFailedEvent;
 import com.phumlanidev.paymentservice.event.publisher.PublishPaymentInitiatedEvent;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class PaymentService {
   private final AuditLogServiceImpl auditLogService;
   private final PublishPaymentFailedEvent paymentFailedEvent;
   private final PublishPaymentInitiatedEvent paymentInitiatedEvent;
+  private final OrderServiceClient orderServiceClient;
   private final PaymentRepository paymentRepository;
   private final PublisherPaymentCompletedEvent paymentCompletedEvent;
 
@@ -45,7 +50,17 @@ public class PaymentService {
 
       log.info("✅ Payment marked as COMPLETED for order ID: {} with transaction: {}", payment.getOrderId(), transactionId);
 
+      OrderDto order = orderServiceClient.getOrderById(payment.getOrderId());
+
+      List<OrderPlacedEvent.OrderItemDto> eventItems = order.getItems().stream()
+              .map(item -> OrderPlacedEvent.OrderItemDto.builder()
+                      .productId(item.getProductId())
+                      .quantity(item.getQuantity())
+                      .build())
+              .toList();
+
       PaymentCompletedEvent event = PaymentCompletedEvent.builder()
+              .paymentId(payment.getPayment_id())
               .orderId(payment.getOrderId())
               .userId(payment.getUserId())
               .toEmail(userEmail)
@@ -53,6 +68,7 @@ public class PaymentService {
               .totalAmount(payment.getAmount())
               .transactionId(transactionId)
               .timestamp(Instant.now())
+              .items(eventItems)
               .build();
 
       try {
