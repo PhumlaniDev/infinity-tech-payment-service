@@ -37,12 +37,6 @@ public class SecurityUtils {
     return jwtAuthenticationConverter.getCurrentJwt().getTokenValue();
   }
 
-  public String getCurrentAuthorizationHeader() {
-    String token = getCurrentToken(); // already strips "Bearer "
-    return "Bearer " + token;
-  }
-
-
   public String getCurrentUsername() {
     return jwtAuthenticationConverter.getCurrentUsername();
   }

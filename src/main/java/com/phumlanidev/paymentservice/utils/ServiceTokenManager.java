@@ -1,66 +1,67 @@
 package com.phumlanidev.paymentservice.utils;
 
+import com.phumlanidev.commonevents.events.auth.TokenResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
-import java.util.Map;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class ServiceTokenManager {
 
-  @Value("${keycloak.token-uri}")
-  private String tokenUri;
+    private final RestTemplate restTemplate;
 
-  @Value("${keycloak.resource}")
-  private String resource;
+    @Value("${keycloak.token-url}")
+    private String tokenUrl;
 
-  @Value("${keycloak.credentials-secret}")
-  private String secret;
+    @Value("${keycloak.client-id}")
+    private String clientId;
 
-  private String cachedToken;
-  private Instant tokenExpiry = Instant.now();
+    @Value("${keycloak.client-secret}")
+    private String clientSecret;
 
-  public String getAccessToken() {
-    if (cachedToken != null && Instant.now().isBefore(tokenExpiry.minusSeconds(60))) {
-      return cachedToken;
+    private String cachedToken;
+    private Instant expiryTime;
+
+    public synchronized String getAccessToken() {
+
+        if (cachedToken != null && expiryTime != null && Instant.now().isBefore(expiryTime)) {
+            return cachedToken;
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "client_credentials");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+
+        HttpEntity<MultiValueMap<String, String>> request =
+                new HttpEntity<>(body, headers);
+
+        ResponseEntity<TokenResponse> response =
+                restTemplate.postForEntity(tokenUrl, request, TokenResponse.class);
+
+        TokenResponse token = response.getBody();
+        if (token == null) {
+            throw new IllegalStateException("Token response was null");
+        }
+
+        cachedToken = token.getAccessToken();
+        expiryTime = Instant.now().plusSeconds(token.getExpiresIn() - 30);
+
+        log.info("🔐 Service token fetched successfully");
+        return cachedToken;
     }
-
-    try {
-      var headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-      var body = new LinkedMultiValueMap<String, String>();
-      body.add("grant_type", "client_credentials");
-      body.add("client_id", resource);
-      body.add("client_secret", secret);
-
-      var entity = new HttpEntity<>(body, headers);
-
-      RestTemplate restTemplate = new RestTemplate();
-      var response = restTemplate.exchange(tokenUri, HttpMethod.POST, entity, Map.class);
-
-      Map<String, Object> responseBody = response.getBody();
-      assert responseBody != null;
-
-      cachedToken = (String) responseBody.get("access_token");
-      int expiresIn = (Integer) responseBody.get("expires_in");
-      tokenExpiry = Instant.now().plusSeconds(expiresIn);
-
-      log.info("Obtained new access token, expires in {} seconds", expiresIn);
-      return cachedToken;
-    } catch (Exception e) {
-      log.error("Error obtaining access token: {}", e.getMessage());
-      throw new RuntimeException(e);
-    }
-  }
-
 }

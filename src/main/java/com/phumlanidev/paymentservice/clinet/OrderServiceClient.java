@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(
         name = "order-service",
-//        url = "${services.order-service.url}",
         path = "/api/v1/order",
         configuration = AuthFeignConfig.class
 )

@@ -22,8 +22,8 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
   @Value("${keycloak.principle-attribute}")
   private String principleAttribute;
 
-  @Value("${keycloak.resource}")
-  private String resourceId;
+  @Value("${keycloak.client-id}")
+  private String clientId;
 
   @Override
   public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
@@ -59,7 +59,7 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
       return Set.of();
     }
 
-    Map<String, Object> client = (Map<String, Object>) resourceAccess.get(resourceId);
+    Map<String, Object> client = (Map<String, Object>) resourceAccess.get(clientId);
     if (client == null || client.get("roles") == null) {
       return Set.of();
     }
