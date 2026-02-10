@@ -22,7 +22,7 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
   @Value("${keycloak.principle-attribute}")
   private String principleAttribute;
 
-  @Value("${keycloak.client-id}")
+  @Value("${keycloak.resource}")
   private String clientId;
 
   @Override

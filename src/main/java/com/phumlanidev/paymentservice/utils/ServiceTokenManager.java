@@ -20,13 +20,13 @@ public class ServiceTokenManager {
 
     private final RestTemplate restTemplate;
 
-    @Value("${keycloak.token-url}")
+    @Value("${keycloak.token-uri}")
     private String tokenUrl;
 
-    @Value("${keycloak.client-id}")
+    @Value("${keycloak.resource}")
     private String clientId;
 
-    @Value("${keycloak.client-secret}")
+    @Value("${keycloak.credentials.secret}")
     private String clientSecret;
 
     private String cachedToken;
