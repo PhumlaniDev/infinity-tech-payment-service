@@ -1,0 +1,276 @@
+openapi: 3.1.0
+info:
+  title: Payment Service API
+  description: |
+    API endpoints for handling payment initiation and status updates using Stripe Checkout.
+    
+    **Flow overview (typical e-commerce):**
+    1. Frontend → `POST /checkout` → receives Stripe Checkout Session URL
+    2. User completes payment on Stripe-hosted page
+    3. Stripe redirects → success/failure URL (your frontend)
+    4. Frontend (or webhook) → calls `/confirm/{transactionId}` or `/fail/{transactionId}`
+    
+    **Security notes:**
+    - `/checkout` should be protected with user JWT (customer context)
+    - `/confirm` and `/fail` are typically called only by trusted frontend or internal services
+    - In production, prefer **Stripe webhooks** (`/webhook`) over polling/confirmation endpoints
+  version: 1.0.0
+  contact:
+    name: Infinity Tech Support
+    email: infinitytech@support.co.za
+  license:
+    name: Proprietary License - All rights reserved.
+    url: https://infinitytech.co.za/terms
+
+servers:
+  - url: https://api.infinitytech.com/v1
+    description: Production server
+  - url: https://staging-api.infinitytech.com/v1
+    description: Staging server
+
+tags:
+  - name: Payments
+    description: Operations for initiating Stripe Checkout sessions and updating payment status
+
+paths:
+  /api/v1/payments/checkout:
+    post:
+      tags:
+        - Payments
+      summary: Create Stripe Checkout Session
+      description: |
+        Creates a new Stripe Checkout Session for the given order/cart.
+        Returns session ID and URL for client-side redirect.
+      operationId: createCheckoutSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentConfirmationRequestDto'
+      responses:
+        '200':
+          description: Checkout session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          description: Payment setup failed (e.g. invalid amount, currency mismatch)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Order already paid or in conflicting state
+  
+  /api/v1/payments/confirm/{transactionId}:
+    post:
+      tags:
+        - Payments
+      summary: Confirm successful payment
+      description: |
+        Marks a payment as COMPLETED after successful Stripe Checkout.
+        Usually called from frontend after redirect or via webhook.
+        The `transactionId` is typically Stripe's `checkout.session.id` or `payment_intent.id`.
+      operationId: confirmPayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Stripe transaction/session identifier
+        - name: paymentId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Internal payment/order identifier
+      responses:
+        '200':
+          description: Payment confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Payment or transaction not found
+        '409':
+          description: Payment already confirmed / in invalid state
+  
+  /api/v1/payments/fail/{transactionId}:
+    post:
+      tags:
+        - Payments
+      summary: Mark payment as failed
+      description: |
+        Marks a payment attempt as FAILED (user cancelled, card declined, etc.).
+        Called after failed redirect or error from Stripe.
+      operationId: failedPayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: paymentId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Payment marked as failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Payment not found
+
+components:
+  schemas:
+    
+    PaymentConfirmationRequestDto:
+      type: object
+      required:
+        - orderId
+        - amount
+        - currency
+      properties:
+        orderId:
+          type: integer
+          format: int64
+          example: 10045
+        amount:
+          type: integer
+          description: Amount in smallest currency unit (e.g. cents)
+          example: 249995
+        currency:
+          type: string
+          example: zar
+        successUrl:
+          type: string
+          format: uri
+          example: https://yourdomain.com/checkout/success?orderId=10045
+        cancelUrl:
+          type: string
+          format: uri
+          example: https://yourdomain.com/checkout/cancel?orderId=10045
+        customerEmail:
+          type: string
+          format: email
+          example: customer@example.com
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            orderNumber: ORD-20260304-10045
+            userId: "550e8400-e29b-41d4-a716-446655440000"
+    
+    PaymentResponseDto:
+      type: object
+      required:
+        - sessionId
+        - checkoutUrl
+      properties:
+        sessionId:
+          type: string
+          example: cs_live_a1B2C3d4E5f6G7h8I9j0K
+        checkoutUrl:
+          type: string
+          format: uri
+          example: https://checkout.stripe.com/c/pay/cs_live_...
+        expiresAt:
+          type: string
+          format: date-time
+    
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 9876
+        orderId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED, REFUNDED]
+          example: COMPLETED
+        amount:
+          type: integer
+          example: 249995
+        currency:
+          type: string
+          example: ZAR
+        paymentMethod:
+          type: string
+          example: CARD
+        transactionId:
+          type: string
+          example: pi_3Mxyz123...
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        failureReason:
+          type: string
+          nullable: true
+          example: card_declined
+    
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        detail:
+          type: string
+          nullable: true
+  
+  responses:
+    BadRequest:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
