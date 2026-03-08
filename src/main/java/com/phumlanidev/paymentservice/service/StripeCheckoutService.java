@@ -69,7 +69,6 @@ public class StripeCheckoutService {
                       .setPriceData(priceData)
                       .build();
 
-
       // Create new session with the line items
       SessionCreateParams params = SessionCreateParams.builder()
               .setMode(SessionCreateParams.Mode.PAYMENT)
@@ -101,8 +100,6 @@ public class StripeCheckoutService {
               .build();
     }
   }
-
-
 }
 
 

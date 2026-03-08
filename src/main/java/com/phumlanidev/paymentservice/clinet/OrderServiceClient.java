@@ -14,5 +14,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface OrderServiceClient {
 
   @GetMapping("/{orderId}")
-  OrderDto getOrderById(@PathVariable("orderId") Long orderId);
+  OrderDto getOrderById(@PathVariable Long orderId);
 }
