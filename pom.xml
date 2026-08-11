@@ -110,6 +110,15 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.phumlanidev.commonevents</groupId>
+			<artifactId>common-events</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
@@ -135,19 +144,19 @@
 		<repository>
 			<id>nexus-releases</id>
 			<name>Nexus Releases Repository</name>
-			<url>https://nexus.phumlaniarendse.co.za/repository/maven-releases/</url>
+			<url>https://nexus.phumlani.dev/repository/maven-releases/</url>
 		</repository>
 		<snapshotRepository>
 			<id>nexus-snapshots</id>
 			<name>Nexus Snapshots Repository</name>
-			<url>https://nexus.phumlaniarendse.co.za/repository/maven-snapshots/</url>
+			<url>https://nexus.phumlani.dev/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
 	<repositories>
 		<repository>
 			<id>nexus</id>
-			<url>https://nexus.phumlaniarendse.co.za/repository/maven-public/</url>
+			<url>https://nexus.phumlani.dev/repository/maven-public/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
