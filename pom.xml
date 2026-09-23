@@ -172,7 +172,9 @@
   </repositories>
 
   <build>
+    <finalName>app</finalName>
     <plugins>
+
       <!--spring maven-->
       <plugin>
         <groupId>org.springframework.boot</groupId>

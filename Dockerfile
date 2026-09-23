@@ -1,11 +1,15 @@
 # First stage: Build the JAR
 FROM eclipse-temurin:21-jdk-jammy AS builder
+
 WORKDIR /app
+
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
+
 RUN ./mvnw dependency:go-offline
 
 COPY src ./src
+
 RUN ./mvnw package -DskipTests
 
 # --- Final image ---
@@ -15,7 +19,8 @@ FROM eclipse-temurin:21-jre-jammy
 RUN groupadd -g 1001 appuser && useradd -u 1001 -g appuser -s /bin/bash -m appuser
 
 WORKDIR /app
-COPY --from=builder /app/target/payment-service-0.0.1-SNAPSHOT-exec.jar app.jar
+
+COPY --from=builder /app/target/app.jar app.jar
 
 # Change file permissions and ownership (optional but good)
 RUN chown -R appuser:appuser /app
